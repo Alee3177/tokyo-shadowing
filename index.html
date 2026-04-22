@@ -23,9 +23,8 @@
     --staff:#8fd3ff;
     --guest:#ffb3d1;
     --card:#1a1f29;
-	  /* 👇 新增 */
-  --mode-bg: #fff4cc;
-  --mode-text: #8B4513;
+    --mode-bg:#fff4cc;
+    --mode-text:#8B4513;
   }
   *{box-sizing:border-box}
   body{
@@ -64,75 +63,67 @@
       0 8px 18px rgba(0,0,0,.12);
     overflow:hidden;
   }
-.mode-slider{
-  position:absolute;
-  top:6px;
-  left:6px;
-  width:calc(50% - 6px);
-  height:calc(100% - 12px);
-  border-radius:14px;
-  background:linear-gradient(180deg,#f7ebbe,#f1df9b);
-  border:1px solid #e2cf8c;
-
-  box-shadow:
-    0 8px 20px rgba(139,69,19,.18),
-    inset 0 1px 0 rgba(255,255,255,.6),
-    0 0 0 1px rgba(255,255,255,.3);
-
-  transition:transform .38s cubic-bezier(.34,1.56,.64,1);
-  z-index:0;
-}
+  .mode-slider{
+    position:absolute;
+    top:6px;
+    left:6px;
+    width:calc(50% - 6px);
+    height:calc(100% - 12px);
+    border-radius:14px;
+    background:linear-gradient(180deg,#f7ebbe,#f1df9b);
+    border:1px solid #e2cf8c;
+    box-shadow:
+      0 8px 20px rgba(139,69,19,.18),
+      inset 0 1px 0 rgba(255,255,255,.6),
+      0 0 0 1px rgba(255,255,255,.3);
+    transition:transform .38s cubic-bezier(.34,1.56,.64,1);
+    z-index:0;
+  }
   .mode-switch.restaurant .mode-slider{
     transform:translateX(100%);
   }
-.mode-btn{
-  position:relative;
-  z-index:1;
-  border:none;
-  border-radius:14px;
-  padding:14px 18px;
-  font-size:19px;
-  cursor:pointer;
-  min-width:180px;
-  background:transparent !important;
-  color: var(--mode-text) !important;
-  font-weight:600;
-  transition:
-    color .25s ease,
-    transform .18s ease,
-    text-shadow .25s ease;
-}
-
-.mode-btn.active{
-  background: transparent !important;
-  color: #6b3410 !important;
-  border: none;
-  font-weight:700;
-  text-shadow:0 1px 0 rgba(255,255,255,.35);
-}
-
-.mode-btn:hover{
-  background: transparent !important;
-  color: #6b3410 !important;
-}
-
-.mode-btn:active{
-  transform:scale(1.03);
-}
+  .mode-btn{
+    position:relative;
+    z-index:1;
+    border:none;
+    border-radius:14px;
+    padding:14px 18px;
+    font-size:19px;
+    cursor:pointer;
+    min-width:180px;
+    background:transparent !important;
+    color:var(--mode-text) !important;
+    font-weight:600;
+    transition:color .25s ease, transform .18s ease, text-shadow .25s ease;
+  }
+  .mode-btn.active{
+    background:transparent !important;
+    color:#6b3410 !important;
+    border:none;
+    font-weight:700;
+    text-shadow:0 1px 0 rgba(255,255,255,.35);
+  }
+  .mode-btn:hover{
+    background:transparent !important;
+    color:#6b3410 !important;
+  }
+  .mode-btn:active{
+    transform:scale(1.03);
+  }
   .controls{
     display:grid;
     grid-template-columns: repeat(6, minmax(0,1fr));
     gap:10px;
   }
-button:not(.mode-btn){
-  border:none;
-  border-radius:12px;
-  padding:12px 14px;
-  font-size:19px;
-  cursor:pointer;
-  background:#2a3342;
-  color:#fff;
-}
+  button:not(.mode-btn){
+    border:none;
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:19px;
+    cursor:pointer;
+    background:#2a3342;
+    color:#fff;
+  }
   button.primary{background:var(--accent); color:#08111f; font-weight:700;}
   button.warn{background:#6a2e2e}
   button:disabled{opacity:.5; cursor:not-allowed}
@@ -185,6 +176,27 @@ button:not(.mode-btn){
   .note{color:var(--muted); line-height:1.7; font-size:14px;}
   .mini{font-size:17px; color:var(--muted);}
   .hidden{display:none !important}
+  .unlock-tip{
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    background:rgba(255,244,204,.96);
+    color:#6b3410;
+    border:1px solid #e2cf8c;
+    border-radius:999px;
+    padding:10px 16px;
+    font-size:16px;
+    font-weight:700;
+    box-shadow:0 8px 20px rgba(0,0,0,.18);
+    z-index:9999;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .unlock-tip.hide{
+    opacity:0;
+    transform:translateX(-50%) translateY(8px);
+    pointer-events:none;
+  }
   @media (max-width: 980px){
     .controls{grid-template-columns: repeat(2, minmax(0,1fr));}
     .mode-switch{
@@ -294,6 +306,8 @@ button:not(.mode-btn){
   </div>
 </div>
 
+<div class="unlock-tip" id="unlockTip">👆 首次點頁面任一處，即自動解鎖語音</div>
+
 <script>
 const tripData = [
   {role:"narrator", jp:"今日は東京で一日観光します。", kana:"きょう は とうきょう で いちにち かんこう します。", romaji:"kyou wa toukyou de ichinichi kankou shimasu.", zh:"今天在東京進行一日觀光。"},
@@ -326,6 +340,7 @@ let mode = 'trip';
 let currentIndex = 0;
 let isPlayingAll = false;
 let stopRequested = false;
+let audioUnlocked = false;
 
 const dialogueEl = document.getElementById('dialogue');
 const statusEl = document.getElementById('status');
@@ -337,6 +352,7 @@ const filterRoleEl = document.getElementById('filterRole');
 const roleFilterWrap = document.getElementById('roleFilterWrap');
 const tripHintWrap = document.getElementById('tripHintWrap');
 const restHintWrap = document.getElementById('restHintWrap');
+const unlockTip = document.getElementById('unlockTip');
 
 function roleLabel(role){
   if(role === 'staff') return '店員';
@@ -401,8 +417,37 @@ function refreshHighlight(){
   refreshStatus(isPlayingAll ? '連續播放中' : '待機中');
 }
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+function markUnlocked(){
+  audioUnlocked = true;
+  unlockTip.classList.add('hide');
+}
+function tryUnlockAudio(){
+  if(audioUnlocked) return;
+  try{
+    const probe = new SpeechSynthesisUtterance(' ');
+    probe.volume = 0;
+    probe.rate = 1;
+    probe.lang = 'ja-JP';
+    probe.onend = () => markUnlocked();
+    probe.onerror = () => markUnlocked();
+    speechSynthesis.cancel();
+    speechSynthesis.speak(probe);
+    setTimeout(markUnlocked, 120);
+  }catch(e){
+    markUnlocked();
+  }
+}
 function speak(text, rate){
   return new Promise(resolve => {
+    if(!audioUnlocked){
+      tryUnlockAudio();
+      if(!audioUnlocked){
+        refreshStatus('請先點頁面任一處啟用語音');
+        resolve();
+        return;
+      }
+    }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'ja-JP';
@@ -451,6 +496,7 @@ function stopAll(){
   speechSynthesis.cancel();
   refreshStatus('已停止');
 }
+
 document.getElementById('btnPlayAll').addEventListener('click', playAll);
 document.getElementById('btnPlayOne').addEventListener('click', playCurrent);
 document.getElementById('btnPrev').addEventListener('click', () => {
@@ -498,6 +544,13 @@ filterRoleEl.addEventListener('change', () => {
   stopAll();
   currentIndex = 0;
   buildUI();
+});
+
+['pointerdown','touchstart','click','keydown'].forEach(evt => {
+  window.addEventListener(evt, tryUnlockAudio, { passive:true, once:false });
+});
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && !audioUnlocked) tryUnlockAudio();
 });
 
 refreshModeUI();
